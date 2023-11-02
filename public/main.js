@@ -1,7 +1,7 @@
 const _buttons = {};
 const _presentation = {
   request: window.PresentationRequest
-    ? new PresentationRequest("./build/index.html")
+    ? new PresentationRequest("./viewer.html")
     : null,
   connection: null,
 };
@@ -17,7 +17,6 @@ const connectDisplay = async () => {
     _presentation.connection.addEventListener("connect", displayConnected);
     _presentation.connection.addEventListener("terminate", displayTerminated);
   } catch (e) {
-    // do nothing when no presentation display is connected
     _buttons.connect.disabled = false;
   }
 };
@@ -80,66 +79,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 window.addEventListener("unload", () => {
   if (_presentation.connection) disconnectDisplay();
 });
-
-// App ID EF1A139F is registered in the Google Cast SDK Developer
-// Console and points to the following custom receiver:
-// https://googlechrome.github.io/samples/presentation-api/receiver/index.html
-const presentationRequest = new PresentationRequest("cast:EF1A139F");
-
-// Make this presentation the default one when using the "Cast" browser menu.
-navigator.presentation.defaultRequest = presentationRequest;
-
-let presentationConnection;
-
-function startHandler() {
-  console.log("Starting presentation request...");
-  presentationRequest
-    .start()
-    .then((connection) => {
-      console.log(
-        "> Connected to " + connection.url + ", id: " + connection.id
-      );
-    })
-    .catch((error) => {
-      // A timeout error is expected because the presentation is not connected.
-    });
-}
-
-presentationRequest.addEventListener("connectionavailable", function (event) {
-  presentationConnection = event.connection;
-  presentationConnection.addEventListener("close", function () {
-    console.log("> Connection closed.");
-  });
-  presentationConnection.addEventListener("terminate", function () {
-    console.log("> Connection terminated.");
-  });
-});
-
-function closeHandler() {
-  console.log("Closing connection...");
-  presentationConnection.close();
-}
-
-function terminateHandler() {
-  console.log("Terminating connection...");
-  presentationConnection.terminate();
-}
-
-/* Availability monitoring */
-
-presentationRequest
-  .getAvailability()
-  .then((availability) => {
-    console.log("Available presentation displays: " + availability.value);
-    availability.addEventListener("change", function () {
-      console.log("> Available presentation displays: " + availability.value);
-    });
-  })
-  .catch((error) => {
-    log(
-      "Presentation availability not supported, " +
-        error.name +
-        ": " +
-        error.message
-    );
-  });
